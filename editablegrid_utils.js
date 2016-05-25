@@ -293,123 +293,112 @@ String.prototype.contains = function(str) { return (this.match(str)==str); };
 String.prototype.startsWith = function(str) { return (this.match("^"+str)==str); };
 String.prototype.endsWith = function(str) { return (this.match(str+"$")==str); };
 
-//Accepted formats: (for EU just switch month and day)
 
-//mm-dd-yyyy
-//mm/dd/yyyy
-//mm.dd.yyyy
-//mm dd yyyy
-//mmm dd yyyy
-//mmddyyyy
-
-//m-d-yyyy
-//m/d/yyyy
-//m.d.yyyy,
-//m d yyyy
-//mmm d yyyy
-
-////m-d-yy
-////m/d/yy
-////m.d.yy
-////m d yy,
-////mmm d yy (yy is 20yy) 
+// formats:
+// 20yy-mm-dd
+// 20yy/mm/dd
+// yymmdd
 
 /**
- * Checks validity of a date string 
+ * Checks validity of a date string
+ * return 0 on error,
  * @private
  */
 EditableGrid.prototype.checkDate = function(strDate, strDatestyle) 
 {
-	// TODO: strptime()
-	strDatestyle = strDatestyle || this.dateFormat;
-	strDatestyle = strDatestyle || "EU";
+	var tup3 = strDate.split('-');
+	if (tup3.length !== 3) {
+		tup3 = strDate.split('/');
+	}
 
-	var strDateArray;
-	var strDay;
-	var strMonth;
-	var strYear;
-	var intday;
-	var intMonth;
-	var intYear;
-	var booFound = false;
-	var strSeparatorArray = new Array("-"," ","/",".");
-	var intElementNr;
-	var err = 0;
-
-	var strMonthArray = this.shortMonthNames;
-	strMonthArray = strMonthArray || ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-	if (!strDate || strDate.length < 1) return 0;
-
-	for (intElementNr = 0; intElementNr < strSeparatorArray.length; intElementNr++) {
-		if (strDate.indexOf(strSeparatorArray[intElementNr]) != -1) {
-			strDateArray = strDate.split(strSeparatorArray[intElementNr]);
-			if (strDateArray.length != 3) return 1;
-			else {
-				strDay = strDateArray[0];
-				strMonth = strDateArray[1];
-				strYear = strDateArray[2];
-			}
-			booFound = true;
+	var year, month, day;
+	if (tup3.length !== 3) {
+		// yymmdd
+		if (strDate.length !== 6) {
+			return 0;
 		}
-	}
-
-	if (booFound == false) {
-		if (strDate.length <= 5) return 1;
-		strDay = strDate.substr(0, 2);
-		strMonth = strDate.substr(2, 2);
-		strYear = strDate.substr(4);
-	}
-
-	// if (strYear.length == 2) strYear = '20' + strYear;
-
-	// US style
-	if (strDatestyle == "US") {
-		strTemp = strDay;
-		strDay = strMonth;
-		strMonth = strTemp;
-	}
-
-	// get and check day
-	intday = parseInt(strDay, 10);
-	if (isNaN(intday)) return 2;
-
-	// get and check month
-	intMonth = parseInt(strMonth, 10);
-	if (isNaN(intMonth)) {
-		for (i = 0;i<12;i++) {
-			if (strMonth.toUpperCase() == strMonthArray[i].toUpperCase()) {
-				intMonth = i+1;
-				strMonth = strMonthArray[i];
-				i = 12;
-			}
+		year = 2000 + parseInt(strDate.slice(0, 2));
+		month = parseInt(strDate.slice(2, 4));
+		day = parseInt(strDate.slice(4, 6));
+	} else {
+		// 20yy
+		year = tup3[0];
+		if (!(year.slice(0, 2) === '20' && year.length === 4)) {
+			return 0;
 		}
-		if (isNaN(intMonth)) return 3;
+		year = parseInt(year);
+
+		month = tup3[1];
+		month = parseInt(month);
+
+		day = tup3[2];
+		day = parseInt(day);
 	}
-	if (intMonth>12 || intMonth<1) return 5;
-
-	// get and check year
-	intYear = parseInt(strYear, 10);
-	if (isNaN(intYear)) return 4;
-	if (intYear < 70) { intYear = 2000 + intYear; strYear = '' + intYear; } // 70 become 1970, 69 becomes 1969, as with PHP's date_parse_from_format
-	if (intYear < 100) { intYear = 1900 + intYear; strYear = '' + intYear; }
-	if (intYear < 1900 || intYear > 2100) return 11;
-
-	// check day in month
-	if ((intMonth == 1 || intMonth == 3 || intMonth == 5 || intMonth == 7 || intMonth == 8 || intMonth == 10 || intMonth == 12) && (intday > 31 || intday < 1)) return 6;
-	if ((intMonth == 4 || intMonth == 6 || intMonth == 9 || intMonth == 11) && (intday > 30 || intday < 1)) return 7;
-	if (intMonth == 2) {
-		if (intday < 1) return 8;
-		if (LeapYear(intYear) == true) { if (intday > 29) return 9; }
-		else if (intday > 28) return 10;
+	if (!year || !month || !day) {
+		return 0;
 	}
 
-	// return formatted date
-	return { 
-		formattedDate: (strDatestyle == "US" ? strMonthArray[intMonth-1] + " " + intday+" " + strYear : intday + " " + strMonthArray[intMonth-1]/*.toLowerCase()*/ + " " + strYear),
-		sortDate: Date.parse(intMonth + "/" + intday + "/" + intYear),
-		dbDate: intYear + "-" + intMonth + "-" + intday 
+	// check month
+	if (month < 1 || month > 12) {
+		return 0;
+	}
+
+	var is_leap = function(year)
+	{
+		var ret = false;
+		if (year % 4 === 0) {
+			ret = true;
+		}
+		if (year % 100 === 0) {
+			ret = false;
+		}
+		if (year % 400 === 0) {
+			ret = true;
+		}
+
+		return ret;
 	};
+
+	var max_day = function(month) {
+		var ret;
+		if ([1, 3, 5, 7, 8, 10, 12].indexOf(month) > 0) {
+			ret = 31;
+		} else {
+			ret = 30;
+			if (month === 2) {
+				ret = 29;
+				if (is_leap(year)) {
+					ret = 28;
+				}
+			}
+		}
+		return ret;
+	};
+
+	// check day
+	if (day < 1 || day > max_day(month)) {
+		return -1;
+	}
+
+	var d = new Date();
+	d.setFullYear(year);
+	// month starts from zero!!!
+	d.setMonth(month - 1);
+	d.setDate(day);
+
+	ret = {
+		formattedDate: year + '-' + month + '-' + day,
+		sortDate: d,
+		dbDate: year + '-' + month + '-' + day
+	};
+	return ret;
+};
+
+// unix timestamp to yyyy-mm-dd
+EditableGrid.prototype.format_date = function(timestamp) {
+	var d = new Date(timestamp * 1000);
+	// TODO: pad zero before month, day
+	return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 };
 
 function LeapYear(intYear) 

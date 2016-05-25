@@ -225,6 +225,27 @@ DateCellRenderer.prototype.render = function(cell, value)
 };
 
 /**
+ * human readable date cell renderer
+ * @constructor
+ * @class Class to render a cell containing a date
+ */
+function TzDateCellRenderer(config) {
+	this.init(config);
+}
+TzDateCellRenderer.prototype = new CellRenderer();
+
+TzDateCellRenderer.prototype.render = function (cell, value) {
+	if (value) {
+		var formatted = this.editablegrid.format_date(value);
+		cell.innerHTML = formatted;
+	} else {
+		cell.innerHTML = '';
+	}
+	cell.style.whiteSpace = 'nowrap';
+};
+
+
+/**
  * Sort header renderer
  * @constructor
  * @class Class to add sorting functionalities to headers

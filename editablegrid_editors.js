@@ -471,7 +471,7 @@ function DateCellEditor(config)
 {
 	// erase defaults with given options
 	this.init(config); 
-};
+}
 
 //inherits TextCellEditor functionalities
 DateCellEditor.prototype = new TextCellEditor();
@@ -500,4 +500,28 @@ DateCellEditor.prototype.displayEditor = function(element, htmlInput)
 
 		}
 	}).datepicker('show');
+};
+
+// human-readable date
+function TzDateCellEditor(config) {
+	// erase defaults with given options
+	this.init(config);
+}
+
+TzDateCellEditor.prototype = new TextCellEditor();
+
+// editorValue is called in getEditor to initialize field
+TzDateCellEditor.prototype.editorValue = function (timestamp) {
+	var date_str = this.editablegrid.format_date(timestamp);
+	return date_str;
+};
+
+// formatValue is called in applyEditing
+// this function converts editor value to timestamp stored in model.
+TzDateCellEditor.prototype.formatValue = function (date_str) {
+	// Date obj
+	var date = this.editablegrid.checkDate(date_str).sortDate;
+	var timestamp = date.getTime() / 1000;
+	timestamp = parseInt(timestamp.toFixed(0));
+	return timestamp;
 };

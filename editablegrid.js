@@ -868,7 +868,7 @@ EditableGrid.prototype._createCellRenderer = function(column)
 					column.datatype == "boolean" ? new CheckboxCellRenderer() : 
 						column.datatype == "email" ? new EmailCellRenderer() : 
 							column.datatype == "website" || column.datatype == "url" ? new WebsiteCellRenderer() : 
-								column.datatype == "date" ? new DateCellRenderer() :
+								column.datatype == "date" ? new TzDateCellRenderer() :
 									new CellRenderer();
 
 								// give access to the column from the cell renderer
@@ -899,15 +899,15 @@ EditableGrid.prototype._createHeaderRenderer = function(column)
  */
 EditableGrid.prototype._createCellEditor = function(column)
 {
-	column.cellEditor = 
+	column.cellEditor =
 		column.enumProvider && column.datatype == "list" && typeof MultiselectCellEditor != 'undefined' ? new MultiselectCellEditor() :
 			column.enumProvider ? new SelectCellEditor() :
 				column.datatype == "integer" || column.datatype == "double" ? new NumberCellEditor(column.datatype) :
 					column.datatype == "boolean" ? null :
 						column.datatype == "email" ? new TextCellEditor(column.precision) :
 							column.datatype == "website" || column.datatype == "url" ? new TextCellEditor(column.precision) :
-								column.datatype == "date" ? (typeof jQuery == 'undefined' || typeof jQuery.datepicker == 'undefined' ? new TextCellEditor(column.precision, 10) : new DateCellEditor({ fieldSize: column.precision, maxLength: 10 })) :
-									new TextCellEditor(column.precision);  
+								column.datatype == "date" ? (new TzDateCellEditor({ fieldSize: column.precision, maxLength: 10 })) :
+									new TextCellEditor(column.precision);
 
 								// give access to the column from the cell editor
 								if (column.cellEditor) {
