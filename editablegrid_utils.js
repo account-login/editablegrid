@@ -380,11 +380,8 @@ EditableGrid.prototype.checkDate = function(strDate, strDatestyle)
 		return -1;
 	}
 
-	var d = new Date();
-	d.setFullYear(year);
 	// month starts from zero!!!
-	d.setMonth(month - 1);
-	d.setDate(day);
+	var d = new Date(year, month - 1, day, 0, 0, 0, 0);
 
 	ret = {
 		formattedDate: year + '-' + month + '-' + day,
